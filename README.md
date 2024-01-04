@@ -1,2 +1,2 @@
 # comps
-Repository for work for senior comprehensive project.
+Repository containing work for senior comprehensive project.
