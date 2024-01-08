@@ -239,4 +239,186 @@ wbWdlBxEir4CaE8LaPhauuOo6pwRmrDw
 
 bandit13
 
-...
+the password for bandit14 is only readable by bandit14. instead, a private key
+for an ssh connection into bandit14 is present in the home directory and is 
+viewable by bandit13.
+
+ssh can authenticate a login with a private key (instead of the default
+password authentication) using the "-i" flag and specifying the file containing
+the private key. once we login to bandit14, we can retrive the login password
+for bandit14.
+
+found: password for bandit14 in /etc/bandit_pass/bandit14 (only viewable by
+bandit14) - fGrHPx402xGC7U7rXKDaxiWFTOiF0ENq
+    >ls
+    >ssh -i sshkey.private -p 2220 bandit14@localhost
+    >cat /etc/bandit_pass/bandit14
+
+-------------------------------------------------------------------------------
+
+bandit14
+
+the password for bandit15 is received when sumbitting the password for bandit14
+to port 30000 on localhost.
+
+"nc" creates a generic TCP connection to a port on a server. we can use nc to
+connect to port 30000 on destination "localhost" (the same server we're
+currently on). once a connection is established, the server waits for input
+from us, and when we give it the password for bandit14, it returns "Correct!"
+and the password for bandit15.
+
+found: password for bandit15 via nc connection to port 30000 on localhost -
+jN2kgmIXJ6fShzhT2avhotn4Zcka6tnt
+    >nc localhost 30000
+    >fGrHPx402xGC7U7rXKDaxiWFTOiF0ENq (password for bandit14)
+
+-------------------------------------------------------------------------------
+
+bandit15
+
+the password for bandit16 is received when submitting the password for bandit15
+to port 30001 on localhost via an openssl connection.
+
+"openssl" is a crazy large tool used for a wide variety of encryption and
+security purposes. we can use the subtool "s_client" to create a test client to
+talk to a destination securely via openssl.
+
+once we make the connection using openssl, a bunch of information about
+handshake steps and certificates is printed, and then we can send data to the
+server using standard input (as in bandit14). when we paste in the password for
+bandit15, it again returns "Correct!" and also the password for bandit16.
+
+like in bandit14, there was no prompt telling me to enter the password. once
+the connection was open, it listened for my input. however, while it set up the
+connection, it printed out a bunch of information (as mentioned above). at the
+end, it printed "read R BLOCK", which at first appeared to be an error (based
+on the note on the bandit15->bandit16 page). however, research into the manual
+of openssl s_client revealed that the message was just a debugging message, was
+not an error, and that the flag which OverTheWire mentioned was just to quiet
+some specific messages (here, trying to read an EOF char).
+
+found: password for bandit16 via openssl connection to port 30001 on localhost
+- JQttfApK4SeyHwDlI9SXGR50qclOAil1
+    >openssl s_client -connect localhost:30001
+     (s_client is the openssl tool that creates a simple client for testing)
+    >jN2kgmIXJ6fShzhT2avhotn4Zcka6tnt (password for bandit15)
+
+-------------------------------------------------------------------------------
+
+bandit16
+
+password for bandit17 received by submitting password for bandit16 to a
+specific port on localhost in range 31000 to 32000.
+
+we can use "nmap" to find open ports on localhost. we can specify which ports
+to scan using the "-p[startport]-[endport]" flag, and we can identify which
+services each of these ports are offering using the "-sV" flag.
+
+from this nmap scan, we find that there are five open ports. ports 31046,
+31691, and 31960 are open and just echo back what you send it. port 31518 is an
+ssl port, but also just echoes. port 31790 is an ssl port and it's function is
+unknown by nmap (so it's probably the right one).
+
+we do the same type of openssl connection as in bandit15, but this time to
+localhost at port 31790. once the connection opens and we paste the password
+for bandit16, the server returns "Correct!" and also an ssh-rsa private key.
+
+we close the connection and exit our remote ssh into bandit16, then create a
+file on our own machine and paste into it the ssh-rsa key from our connection
+with port 31790. then, we ssh into bandit17 using the private key, and get the
+password for bandit17 from /etc/bandit_pass/bandit17.
+
+one thing to note is that an ssh connection from bandit16 to bandit17 does not
+seem to be possible, as restrictions are in place to "conserve resources", so
+the private key needs to be stored on one's personal machine.
+
+found: password for bandit17 in /etc/bandit_pass/bandit17 (only viewable by
+bandit17) - VwOSWtCA7lRKkTfbr2IDh6awj9RNZM5e
+    >nmap -sV -p31000-32000 localhost
+    >openssl s_client -connect localhost:31790
+    >JQttfApK4SeyHwDlI9SXGR50qclOAil1 (password for bandit16)
+     (copy ssh-rsa private key)
+    >exit
+    >vi bandit17.private
+     (paste in entire ssh-rsa private key)
+    >ssh -p 2220 -i bandit17.private bandit17@bandit.labs.overthewire.org
+    >cat /etc/bandit_pass/bandit17
+
+-------------------------------------------------------------------------------
+
+bandit17
+
+password for bandit18 is the only line in passwords.new which is different from
+passwords.old (both files in the home dir).
+
+we can use "diff" to compare the contents of two files. here, diff reveals that
+line 42 changed between the two files and is the only difference. also, since
+diff takes two files as arguments, the "<" indicates the changes in the first
+argument, while the ">" indicates the changes in the second argument.
+
+found: password for bandit18 in passwords.new -
+hga5tuuCLF6fFzUpnagiMN8ssu9LFrdg
+    >diff passwords.old passwords.new
+
+-------------------------------------------------------------------------------
+
+bandit18
+
+password for bandit19 is stored in a file called readme in the home directory.
+however, .bashrc has been modified so that any ssh connection is immediately
+logged out.
+
+we can execute a command on the destination machine with ssh. thus, we simply
+execute the same ssh command to login to bandit18 and append "cat readme" to it
+to find the password for bandit19.
+
+found: password for bandit19 in readme - awhqfNnAbc1naukrpqDYcF95h7HoMTrC
+    >ssh -p 2220 bandit18@bandit.labs.overthewire.org cat readme
+
+-------------------------------------------------------------------------------
+
+bandit19
+
+password for bandit20 is only stored in /etc/bandit_pass/bandit20, which is
+readable only by bandit20.
+
+there is a binary in the home directory called "bandit20-do", which allows a
+command to be run as bandit20. we can thus use this command to simply read the
+contents of /etc/bandit_pass/bandit20 to get the password for bandit20.
+
+found: password for bandit20 in /etc/bandit_pass/bandit20 - 
+VxCazJaVykI6W36BkBU0mJTCM8rR95XT
+    >ls
+    >./bandit20-do
+    >./bandit20-do cat /etc/bandit_pass/bandit20
+
+-------------------------------------------------------------------------------
+
+bandit20
+
+password for bandit21 is received when the binary suconnect reads the password
+for bandit20.
+
+"suconnect" is a binary which, when run, connects to a specified port on 
+localhost and listens for data. If it receives the password for bandit20, it
+responds with the password for bandit21.
+
+"tmux" allows us to "multiplex" our terminal, or create multiple terminals that
+can be accessed and controlled on a single screen. we can create two detachable
+terminals using tmux, and set up a TCP listening server on one of them with nc.
+then, in the other terminal, we connect to the listening server with suconnect.
+finally, we switch back to the first terminal (the listening server) and enter
+the password for bandit20. this will get sent to the suconnect process, which
+confirms that it's bandit20's password and transmits back the password for
+bandit21.
+
+found: password for bandit21 via suconnect binary - 
+NvEJF7oVjkddltPSrdKEFOllh9V1IBcq
+    >ls
+    >tmux
+    >nc -lknvp 34512 (set up a TCP server listening at port 34512)
+    >Ctrl-b d (detach current screen)
+    >tmux
+    >./suconnect
+    >Ctrl-b ( (switch to previous tmux screen)
+    >VxCazJaVykI6W36BkBU0mJTCM8rR95XT (password for bandit20)
