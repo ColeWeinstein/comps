@@ -1,0 +1,185 @@
+Notes on natas wargames.
+
+-------------------------------------------------------------------------------
+
+natas0
+
+found: password for natas1 in a comment in the <div id="content"> block of the
+webpage's html - g9D9cREhslqBKtcA2uocGHPfMZVzeFK6
+
+-------------------------------------------------------------------------------
+
+natas1
+
+right clicking has been blocked on this page, but if an inspector is open from
+the previous page, it will stay open. (also, pressing f12 while on the page
+opens the inspector without the need for a right click.)
+
+found: password for natas2 in a comment in the <div id="content"> block of the
+webpage's html - h4ubbcXrWqsTo7GGnnUMLppXbOogfBZ7
+
+-------------------------------------------------------------------------------
+
+natas2
+
+the only content on this page is a 1x1 pixel image and some text. however, we
+can see in the inspector that the image is a local file, stored in
+"files/pixel.png". from this, if we decide to go to the url
+"natas2.natas.labs.overthewire.org/files", we are shown the contents of the
+"files" folder, which also contains a file called "users.txt". clicking on this
+file shows a list of usernames and passwords, including a listing for natas3.
+
+found: password for natas3 in "files/users.txt" - 
+G6ctbMJ5Nb4cbFwhpMPSvxGHhQ7I6W8Q
+
+-------------------------------------------------------------------------------
+
+natas3
+
+the only comment in the html this time is that not even Google can find this
+page's secret. i had to get some help for this one, but apparently search
+engine crawlers look for a specific "robots.txt" file to know which files they
+can't request from the host. viewing this file (by going to the url
+"natas3.natas.labs.overthewire.org/robots.txt") shows us that one folder is not
+allowed to be viewed, "/s3cr3t/". navigating to this folder reveals that it
+contains a file "users.txt", which contains a listing for natas4.
+
+found: password for natas4 in "s3cr3t/users.txt" - 
+tKOcJIbzM4lTs8hbCmzn5Zr4434fGZQm
+
+-------------------------------------------------------------------------------
+
+natas4
+
+access to the contents of this page appear to be disallowed unless the user is
+coming from "natas5.natas.labs.overthewire.org". this basically means that we
+need to set the value of the "Referer" header in the GET request for the page
+to be the natas5 link. i was able to set this most easily by using Burpsuite to
+intercept and edit my HTTP requests.
+
+found: password for natas5 in main content - Z0NsrtIkJoKALBCLi5eqFfcRN82Au2oD
+
+-------------------------------------------------------------------------------
+
+natas5
+
+access to the contents of this page appear to be disallowed unless the user is
+"logged in". doing some digging in the inspector led me to find a cookie for
+the page named "loggedin" whose value was set to 0. i changed it to a 1 and
+refreshed the page, and boom, access granted.
+
+found: password for natas6 in main content - fOIvE0MDtPTgRhqmmvvAOt2EfXR6uQgR
+
+-------------------------------------------------------------------------------
+
+natas6
+
+access to the contents of this page are only granted if the user enters the
+secret into the text box. clicking on the link "View sourcecode" shows an html
+file with a version of the source code for the page, including the php script
+used. as a part of this script, we see an include statement for the file
+"include/secret.inc" and a check to see if the text entered is equivalent to
+the secret stored in this file. navigating to this file can be done in the
+browser, and a comment at the top of the file (found by inspecting the webpage)
+reveals that the secret is the string "FOEIUWGHFEEUHOFUOIU". entering this into
+the text box on the original webpage indeed reveals the password for natas7.
+
+found: password for natas7 after submitting the secret - 
+jmxSiH3SP6Sonf8dv66ng8v1cIEdjXWr
+
+-------------------------------------------------------------------------------
+
+natas7
+
+this page has two links which execute the same php script on the server, with
+a different argument. one link executes "index.php" with the field "page" set
+as "home" while the other executes the script with "page" set as "about". by
+adding "home" at the end of the original url, we find that a file exists with
+the same content that's displayed when accessing "index.php?page=home", and it
+appears that the php script just displays the contents of the file at the
+address described in the value of "page". thus, we can set "page" equal to
+"/etc/natas_webpass/natas8" and have the script print the password for natas8.
+(full final url: 
+natas7.natas.labs.overthewire.org/indexphp?page=/etc/natas_webpass/natas8)
+
+found: password for natas8 in "/etc/natas_webpass/natas8" -
+a6bZCNYwdKqN5cGP11ZdtPg0iImQQhAB 
+
+-------------------------------------------------------------------------------
+
+natas8
+
+this page also has a text box to submit a secret and a link to view the source
+code for the page, similar to natas6. this time, the secret is directly in the
+php code, but has been encoded. analyzing the rest of the php reveals that the
+string entered in the text box is encoded in base64, reversed, and then
+translated from binary to hexadecimal. since the encoded version of the secret
+is in the php code, i wrote a php script to reverse all of these operations
+(in this folder as decodeSecret.php). lacking a better method to execute it, i
+moved it into /var/www/html in my Kali VM, spun up apache2, and accessed the
+php script from my browser to find the original secret to be "oubWYf2kBq".
+entering this into the texbox on the original webpage indeed reveals the
+password for natas9.
+
+found: password for natas9 after submitting the secret -
+Sda6t0vkOPkM8YeOZkAGVhFoaplvlJFd
+
+-------------------------------------------------------------------------------
+
+natas9
+
+this page has a text box which allows the user to "find words containing" a
+given string, and also a button to view a version of the page's source code.
+looking at the source code reveals that the string entered into the text box is
+directly passed to the terminal as part of a grep command, and we can exploit
+this fact to read the password file for natas10. if we include a ";" in our
+input, the grep command ends and the rest of our input is executed as a second
+command. thus, if we simply enter ";cat /etc/natas_webpass/natas10;" as our
+input, we end the grep command early (so it prints nothing) and we only receive
+the results of the cat command, giving us the password for natas10.
+
+found: password for natas10 in /etc/natas_webpass/natas10 -
+D44EcsFkLxPIkAAKLosx8z3hxX1Z4MCE
+
+-------------------------------------------------------------------------------
+
+natas10
+
+this page has the same setup as natas9, but also includes a warning that input
+is now filtered "for security reasons". viewing the source code, we see that
+"[", ";", "|", "&", and "]" are all considered illegal characters now. the good
+news is that we can still execute the same trick; we just have to use newlines
+instead of semicolons. if we enter "cat /etc/natas_webpass/natas11" into the
+text box and hit enter, we see the command appear in the url as the value to
+the field "needle". by inserting into the url "%0A" (the newline character, in
+a url-friendly format) before "cat", we force the grep command to execute early
+and allow our cat command to be run. hitting enter to request this url indeed
+returns the password for natas11.
+
+found: password for natas11 in /etc/natas_webpass/natas11 -
+1KFqoJXi6hRaPluAmk8ESDW4fSysRoIg
+
+-------------------------------------------------------------------------------
+
+natas11
+
+this page says that "Cookies are protected with XOR encryption", and also has a
+link to view a version of the source code for the page. observing the source
+code, we find that the cookie stores information about whether to show the user
+the password, and that it's xor-ed with a (censored) key before being sent to
+the client. if we can figure out the key, we can craft our own cookie and xor
+both to get a cookie that we can use to view the password.
+
+the "findkey.php" script in this folder takes the default client cookie 
+(base64-decoded) and the default data array as described in the source code
+(json-encoded) and xors them. since the information in the array is identical,
+xor-ing the two items reveals the key ("KNHL").
+
+the "bakecookie.php" script in this folder then takes the identified key and
+uses it to xor enncrypt a new data array, this time one with the "showpassword"
+field set to "yes". encoding this properly and sending the new cookie back with
+a new GET request (by changing the value of the cookie "data" in the inspector)
+reveals the password for natas12.
+
+found: password for natas12 in main content - YWqo0pjpcXzSIl5NMAVxg12QxeC1w9QG
+
