@@ -1,0 +1,37 @@
+attacking.txt
+Notes on testing peer VMs for vulnerabilities.
+
+404
+could not initially launch vm due to partition error. after much messing around with ashok, got the vm running.
+appeared to be mtie's minimal install vm (later confirmed true), but the password for slab had been changed.
+found the IP address, and found OpenSSH, vsftpd, and Apache2 services running on ports 21, 22, and 80,
+respectively. Apache2 server appeared unchanged; still had default index.html page and some gobuster tests
+reported no commonly named folders or files. however, some research on ftp shows that you can just remote login
+to an ftp server, and can do so ANONYMOUSLY, and then you can just DOWNLOAD THE FILES ON THE SERVER. so they
+had a file called login.txt and i got the login to the slab account.
+	apparently, you can also upload your own files to the ftp server. unfortunately, i couldn't quite get
+	this to work, but had i been able to, there was a cron job that automatically executed every file with
+	"admin" in the name every five minutes. so you could also get a remote shell by exploiting this setup
+	as well.
+
+BlackHoodies
+able to launch vm; looked like minimal install from mtie. login with slab:slab worked; able to login as root.
+no extra accounts seem to have been created, just slab and cslab, and it's hard to tell if any files have been
+created recently as well. unsure how to proceed with this vm.
+
+Nebuchadnezzar
+able to launch vm, locked by password to nontrivial account. attacked with kali vm. found target IP with nmap,
+then found that the target was running an Apache web server. accessed the webpage, saw a file upload button,
+messed around briefly with uploading a file, then decided to use gobuster to see if there were any accessible
+directories. found /files/, which had the files passwords.txt and terminal.html. terminal.html provided a
+webshell, but required the password from passwords.txt. able to execute commands with authority of www-data.
+	some further research appears to indicate that the file upload never actually did anything.
+
+Kiyr
+able to launch vm; also looked like minimal install by mtie. login with slab:slab worked; able to login as root.
+listing services showed that apache was running, but ip a showed ens33 down; edited
+/etc/netpass/00-installer-config.yaml and restarted machine. able to find apache running with nmap on kali,
+accessed webserver. the only link on the page didn't work (directed to a specific ip??), but able to access the
+link by editing url. met with upload page, injected a php file, then found the folder uploads went to (resumes)
+via gobuster. there were some other files (and my php file worked), including one with code for a postgres
+connection that appears to not have been completed.

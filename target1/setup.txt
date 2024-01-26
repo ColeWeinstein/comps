@@ -1,0 +1,41 @@
+setup.txt
+Notes on setting up the ManicMeese VM.
+
+1) Downloaded a Ubuntu Live Server .iso from https://ubuntu.com/download/server. Created a new VM
+with this .iso and followed the setup instructions.
+
+1.1) In VMware, click "Create a New Virtual Machine", click "Next" twice, then for "Install from"
+select "Installer disc image file (iso)" and select the path to the downloaded .iso file. Then,
+click "Next", name the VM, select where you want to store it, and click "Next" until you finish
+setting up the VM.
+
+1.2) When setting up the Ubuntu server VM, select all of the default settings, except when asked if
+you want to install OpenSSH. Here, select that you want to install OpenSSH (default is not to).
+
+2) Installed Apache2 (newest version - 2.4.??). Created a new index.html with some moose-related
+content. (Apache2 web server was automatically configured to run at startup and at port 80.)
+
+3) Setup an account "webmaster" used to manage the webserver. Chown var/www/html and its contents
+to be owned by webmaster. Also, added the following code to the section of /etc/apache2/apache2.conf
+that "Sets the default security model of the Apache2 HTTPD server", in order to make the webmaster
+home directory accessible by the webserver (at the alias "/web/").
+	
+	Alias "/web" "/home/webmaster"
+	<Directory /home/webmaster>
+		Options Indexes
+		AllowOverride None
+		Require all granted
+	</Directory>
+
+3.1) Make "/", "/home", and "/home/webmaster" world executable, so that the Apache webserver can
+access the webmaster home directory.
+
+4) Created a directory "images/" in webmaster's home directory to store images for the webserver.
+Added some secret txt files :)
+
+5) Created an SSH key pairs using the ssh-keygen command. The keys were automatically placed into
+".ssh/" within the "webmaster/" home directory. Added the entire contents of the public key to
+".ssh/authorized_keys" to allow users to ssh into the machine as webmaster.
+
+6) Make everything in "webmaster/" world readable, recursively (chmod -r a+x .). Make the
+subdirectories in "webmaster/" world executable, again so that the Apache webserver can access them.
