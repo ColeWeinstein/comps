@@ -4,19 +4,27 @@ Notes on setting up the ManicMeese VM.
 1) Downloaded a Ubuntu Live Server .iso from https://ubuntu.com/download/server. Created a new VM
 with this .iso and followed the setup instructions.
 
-1.1) In VMware, click "Create a New Virtual Machine", click "Next" twice, then for "Install from"
-select "Installer disc image file (iso)" and select the path to the downloaded .iso file. Then,
-click "Next", name the VM, select where you want to store it, and click "Next" until you finish
+1.1) In VMware, clicked "Create a New Virtual Machine", clicked "Next" twice, then for "Install
+from" selected "Installer disc image file (iso)" and selected the path to the downloaded .iso file.
+Then, clicked "Next", named the VM, selected where to store it, and clicked "Next" until I finished
 setting up the VM.
 
-1.2) When setting up the Ubuntu server VM, select all of the default settings, except when asked if
-you want to install OpenSSH. Here, select that you want to install OpenSSH (default is not to).
+1.2) When setting up the Ubuntu server VM, selected all of the default settings, except when asked
+if I wanted to install OpenSSH. Here, selected that I wanted to install OpenSSH (default is not to).
 
-2) Installed Apache2 (newest version - 2.4.??). Created a new index.html with some moose-related
+2) Installed Apache2 (newest version - 2.4.52). Created a new index.html with some moose-related
 content. (Apache2 web server was automatically configured to run at startup and at port 80.)
 
-3) Setup an account "webmaster" used to manage the webserver. Chown var/www/html and its contents
-to be owned by webmaster. Also, added the following code to the section of /etc/apache2/apache2.conf
+2.1) Edited "/etc/netplan/00-installer-config.yaml" to include the following instructions, in order
+to allow the VM to connect to the network interfaces used by both VMware and UTM:
+
+	ens33:
+	  dhcp4: true
+	enp0s1:
+	  dhcp4: true
+
+3) Setup an account "webmaster" used to manage the webserver. Chown "var/www/html" and its contents
+to be owned by webmaster. Also, added the code below to the section of "/etc/apache2/apache2.conf"
 that "Sets the default security model of the Apache2 HTTPD server", in order to make the webmaster
 home directory accessible by the webserver (at the alias "/web/").
 	
@@ -27,7 +35,7 @@ home directory accessible by the webserver (at the alias "/web/").
 		Require all granted
 	</Directory>
 
-3.1) Make "/", "/home", and "/home/webmaster" world executable, so that the Apache webserver can
+3.1) Made "/", "/home", and "/home/webmaster" world executable, so that the Apache webserver could
 access the webmaster home directory.
 
 4) Created a directory "images/" in webmaster's home directory to store images for the webserver.
@@ -37,5 +45,5 @@ Added some secret txt files :)
 ".ssh/" within the "webmaster/" home directory. Added the entire contents of the public key to
 ".ssh/authorized_keys" to allow users to ssh into the machine as webmaster.
 
-6) Make everything in "webmaster/" world readable, recursively (chmod -r a+x .). Make the
+6) Made everything in "webmaster/" world readable, recursively (via "chmod -r a+x ."). Made the
 subdirectories in "webmaster/" world executable, again so that the Apache webserver can access them.
